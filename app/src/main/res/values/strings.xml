@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FlowKeys</string>
+    <string name="ime_name">FlowKeys Voice</string>
+    <string name="status_idle">Tap the mic and start talking</string>
+</resources>
