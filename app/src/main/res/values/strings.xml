@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FlowKeys</string>
-    <string name="ime_name">FlowKeys Voice</string>
-    <string name="status_idle">Tap the mic and start talking</string>
+    <string name="a11y_description">Shows a floating microphone button next to text fields and types your dictated speech into the field you are using. FlowKeys only reads which field is focused, and never reads or stores what is on your screen. Password fields are ignored.</string>
 </resources>

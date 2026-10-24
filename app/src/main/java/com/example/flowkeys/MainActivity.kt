@@ -2,12 +2,11 @@ package com.example.flowkeys
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
@@ -23,6 +22,7 @@ class MainActivity : Activity() {
     private lateinit var llmModel: EditText
     private lateinit var dictionary: EditText
     private lateinit var cleanup: Switch
+    private lateinit var alwaysShow: Switch
     private lateinit var setupStatus: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +35,7 @@ class MainActivity : Activity() {
         llmModel = findViewById(R.id.llmModel)
         dictionary = findViewById(R.id.dictionary)
         cleanup = findViewById(R.id.cleanup)
+        alwaysShow = findViewById(R.id.alwaysShow)
         setupStatus = findViewById(R.id.setupStatus)
 
         val prefs = Prefs.get(this)
@@ -44,15 +45,18 @@ class MainActivity : Activity() {
         llmModel.setText(prefs.str(Prefs.LLM_MODEL, Prefs.DEFAULT_LLM_MODEL))
         dictionary.setText(prefs.str(Prefs.DICTIONARY))
         cleanup.isChecked = prefs.getBoolean(Prefs.CLEANUP, true)
+        alwaysShow.isChecked = prefs.getBoolean(Prefs.ALWAYS_SHOW, false)
 
         findViewById<Button>(R.id.btnMic).setOnClickListener {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQ_MIC)
         }
-        findViewById<Button>(R.id.btnEnable).setOnClickListener {
-            startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+        findViewById<Button>(R.id.btnAppInfo).setOnClickListener {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+            )
         }
-        findViewById<Button>(R.id.btnPick).setOnClickListener {
-            imm().showInputMethodPicker()
+        findViewById<Button>(R.id.btnA11y).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
         findViewById<Button>(R.id.btnSave).setOnClickListener {
             save()
@@ -70,12 +74,6 @@ class MainActivity : Activity() {
         super.onPause()
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        // The keyboard picker is a dialog; refresh after it closes.
-        if (hasFocus) refreshStatus()
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         refreshStatus()
@@ -89,24 +87,24 @@ class MainActivity : Activity() {
             .putString(Prefs.LLM_MODEL, llmModel.text.toString().trim())
             .putString(Prefs.DICTIONARY, dictionary.text.toString().trim())
             .putBoolean(Prefs.CLEANUP, cleanup.isChecked)
+            .putBoolean(Prefs.ALWAYS_SHOW, alwaysShow.isChecked)
             .apply()
     }
 
     private fun refreshStatus() {
         val micOk = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-        val enabled = imm().enabledInputMethodList.any { it.packageName == packageName }
-        val selected = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
-            ?.startsWith("$packageName/") == true
+        val a11yOn = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+            ?.split(':')
+            ?.any { it.startsWith("$packageName/") } == true
+        val keyOk = Prefs.get(this).str(Prefs.OPENAI_KEY).isNotEmpty()
 
         fun line(ok: Boolean, text: String) = (if (ok) "✅  " else "⬜  ") + text
         setupStatus.text = listOf(
             line(micOk, "Microphone allowed"),
-            line(enabled, "Keyboard turned on"),
-            line(selected, "FlowKeys is the current keyboard"),
+            line(a11yOn, "Floating bubble turned on"),
+            line(keyOk, "OpenAI key saved"),
         ).joinToString("\n")
     }
-
-    private fun imm() = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
 
     companion object {
         private const val REQ_MIC = 1

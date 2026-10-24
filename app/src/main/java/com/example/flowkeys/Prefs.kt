@@ -10,6 +10,9 @@ object Prefs {
     const val LLM_MODEL = "llm_model"
     const val CLEANUP = "cleanup"
     const val DICTIONARY = "dictionary"
+    const val ALWAYS_SHOW = "always_show"
+    const val BUBBLE_X = "bubble_x"
+    const val BUBBLE_Y = "bubble_y"
 
     const val DEFAULT_STT_MODEL = "gpt-4o-mini-transcribe"
     const val DEFAULT_LLM_MODEL = "claude-haiku-5-5"
