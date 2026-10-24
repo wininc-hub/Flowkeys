@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,3 +29,16 @@ jobs:
         with:
           name: FlowKeys-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      # Direct .apk download link for phones: github.com/<owner>/<repo>/releases/latest
+      - name: Publish to Releases
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk FlowKeys.apk
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" FlowKeys.apk \
+            --title "FlowKeys build ${{ github.run_number }}" \
+            --notes "Tap FlowKeys.apk to download and install." \
+            --latest
